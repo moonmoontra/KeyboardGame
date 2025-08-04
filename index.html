@@ -1,0 +1,795 @@
+.instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            backdrop-filter: blur(5px);
+        }<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Знайди клавішу - Гра на запам'ятовування клавіатури</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .game-container {
+            max-width: 1000px;
+            width: 90%;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .game-header {
+            margin-bottom: 30px;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .current-key {
+            background: rgba(255,255,255,0.2);
+            padding: 20px 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .key-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #ffeb3b;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+            animation: pulse 1s infinite;
+            transition: all 0.3s ease;
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .timer-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #ffeb3b, #f44336);
+            border-radius: 4px;
+            transition: width 0.1s linear;
+        }
+
+        .keyboard {
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .key {
+            background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+            border: 2px solid #555;
+            border-radius: 8px;
+            margin: 2px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            color: transparent;
+            min-width: 40px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .key:hover {
+            background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .key.correct {
+            background: linear-gradient(145deg, #4caf50, #45a049);
+            animation: correctFlash 0.5s ease;
+        }
+
+        .key.wrong {
+            background: linear-gradient(145deg, #f44336, #da190b);
+            animation: wrongShake 0.5s ease;
+        }
+
+        @keyframes correctFlash {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .key.space {
+            width: 200px;
+        }
+
+        .key.wide {
+            width: 80px;
+        }
+
+        .key.extra-wide {
+            width: 120px;
+        }
+
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .button {
+            background: linear-gradient(145deg, #4caf50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .game-modes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            justify-content: center;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .mode-card {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            text-align: center;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .mode-card:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .mode-card h4 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #ffeb3b;
+        }
+
+        .mode-card p {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .mode-description {
+            flex-grow: 1;
+            margin-bottom: 15px;
+        }
+
+        .mode-card .button {
+            margin: 0;
+            width: 100%;
+        }
+
+        .mode-indicator {
+            background: rgba(255,235,59,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="startScreen" class="start-screen">
+            <h1 class="game-title">🎮 Знайди клавішу</h1>
+            <div class="instructions">
+                <h3>Оберіть режим гри:</h3>
+            </div>
+            
+            <div class="game-modes">
+                <div class="mode-card" onclick="startGame('mouse')">
+                    <div>
+                        <h4>🖱️ Режим миші</h4>
+                        <div class="mode-description">
+                            <p>• Дивіться на екран і запам'ятовуйте розташування клавіш</p>
+                            <p>• Коли з'явиться назва клавіші, натисніть на неї мишкою</p>
+                            <p>• У вас є 5 секунд на кожне натискання</p>
+                            <p>• Не підглядайте на фізичну клавіатуру!</p>
+                        </div>
+                    </div>
+                    <button class="button">Грати мишкою</button>
+                </div>
+                
+                <div class="mode-card" onclick="startGame('keyboard')">
+                    <div>
+                        <h4>⌨️ Режим клавіатури</h4>
+                        <div class="mode-description">
+                            <p>• Коли з'явиться назва клавіші, натисніть її на фізичній клавіатурі</p>
+                            <p>• Швидкість реакції має значення!</p>
+                            <p>• Тренуйте швидкий слепий друк</p>
+                            <p>• Ідеально для вивчення української розкладки</p>
+                        </div>
+                    </div>
+                    <button class="button">Грати клавіатурою</button>
+                </div>
+
+                <div class="mode-card" onclick="startGame('speed')">
+                    <div>
+                        <h4>⚡ Швидкісний режим</h4>
+                        <div class="mode-description">
+                            <p>• Тільки 2 секунди на кожну клавішу!</p>
+                            <p>• Використовуйте фізичну клавіатуру або мишку</p>
+                            <p>• Подвійні очки за правильні відповіді</p>
+                            <p>• Перевірте свою швидкість реакції!</p>
+                        </div>
+                    </div>
+                    <button class="button">Швидкісний виклик</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="gameScreen" style="display: none;">
+            <div class="game-header">
+                <h1 class="game-title">🎮 Знайди клавішу</h1>
+                <div class="mode-indicator" id="modeIndicator">
+                    🖱️ Режим миші
+                </div>
+                <div class="stats">
+                    <div>Очки: <span id="score">0</span></div>
+                    <div>Правильно: <span id="correct">0</span></div>
+                    <div>Помилок: <span id="wrong">0</span></div>
+                    <div>Рівень: <span id="level">1</span></div>
+                </div>
+            </div>
+
+            <div class="current-key">
+                <div>Знайдіть клавішу:</div>
+                <div class="key-display" id="targetKey">Й</div>
+                <div class="timer-bar">
+                    <div class="timer-fill" id="timerFill"></div>
+                </div>
+            </div>
+
+            <div class="keyboard" id="keyboard">
+                <!-- Клавіатура буде створена JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <div class="game-over-content">
+            <h2>🎉 Гра закінчена!</h2>
+            <p>Фінальний рахунок: <span id="finalScore">0</span></p>
+            <p>Точність: <span id="accuracy">0</span>%</p>
+            <button class="button" onclick="restartGame()">Грати знову</button>
+            <button class="button" onclick="showStart()">В головне меню</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            score: 0,
+            correct: 0,
+            wrong: 0,
+            level: 1,
+            currentKey: '',
+            timeLeft: 5000,
+            gameActive: false,
+            timer: null,
+            timerInterval: null,
+            gameMode: 'mouse', // 'mouse', 'keyboard', або 'speed'
+            timeLimit: 5000 // час на кожне натискання в мілісекундах
+        };
+
+        // Маппінг для фізичної клавіатури
+        const physicalKeyMap = {
+            'Escape': 'Esc',
+            'F1': 'F1',
+            'F2': 'F2',
+            'F3': 'F3',
+            'F4': 'F4',
+            'F5': 'F5',
+            'F6': 'F6',
+            'F7': 'F7',
+            'F8': 'F8',
+            'F9': 'F9',
+            'F10': 'F10',
+            'F11': 'F11',
+            'F12': 'F12',
+            'Backquote': '\'',
+            'Digit1': '1',
+            'Digit2': '2', 
+            'Digit3': '3',
+            'Digit4': '4',
+            'Digit5': '5',
+            'Digit6': '6',
+            'Digit7': '7',
+            'Digit8': '8',
+            'Digit9': '9',
+            'Digit0': '0',
+            'Minus': '-',
+            'Equal': '=',
+            'Backspace': 'Backspace',
+            'Tab': 'Tab',
+            'KeyQ': 'Й',
+            'KeyW': 'Ц',
+            'KeyE': 'У',
+            'KeyR': 'К',
+            'KeyT': 'Е',
+            'KeyY': 'Н',
+            'KeyU': 'Г',
+            'KeyI': 'Ш',
+            'KeyO': 'Щ',
+            'KeyP': 'З',
+            'BracketLeft': 'Х',
+            'BracketRight': 'Ї',
+            'Backslash': '\\',
+            'CapsLock': 'Caps',
+            'KeyA': 'Ф',
+            'KeyS': 'І',
+            'KeyD': 'В',
+            'KeyF': 'А',
+            'KeyG': 'П',
+            'KeyH': 'Р',
+            'KeyJ': 'О',
+            'KeyK': 'Л',
+            'KeyL': 'Д',
+            'Semicolon': 'Ж',
+            'Quote': 'Є',
+            'Enter': 'Enter',
+            'ShiftLeft': 'Shift',
+            'ShiftRight': 'Shift',
+            'KeyZ': 'Я',
+            'KeyX': 'Ч',
+            'KeyC': 'С',
+            'KeyV': 'М',
+            'KeyB': 'И',
+            'KeyN': 'Т',
+            'KeyM': 'Ь',
+            'Comma': 'Б',
+            'Period': 'Ю',
+            'Slash': '.',
+            'ControlLeft': 'Ctrl',
+            'ControlRight': 'Ctrl',
+            'MetaLeft': 'Win',
+            'MetaRight': 'Win',
+            'AltLeft': 'Alt',
+            'AltRight': 'Alt',
+            'Space': 'Space',
+            'ContextMenu': 'Menu'
+        };
+        const keyboardLayout = [
+            ['\'', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
+            ['Tab', 'Й', 'Ц', 'У', 'К', 'Е', 'Н', 'Г', 'Ш', 'Щ', 'З', 'Х', 'Ї', '\\'],
+            ['Caps', 'Ф', 'І', 'В', 'А', 'П', 'Р', 'О', 'Л', 'Д', 'Ж', 'Є', 'Enter'],
+            ['Shift', 'Я', 'Ч', 'С', 'М', 'И', 'Т', 'Ь', 'Б', 'Ю', '.', 'Shift'],
+            ['Ctrl', 'Win', 'Alt', 'Space', 'Alt', 'Win', 'Menu', 'Ctrl']
+        ];
+
+        // Відображення клавіш для гравця (без підписів на клавішах)
+        const keyDisplayNames = {
+            'Esc': 'Escape',
+            'F1': 'F1', 'F2': 'F2', 'F3': 'F3', 'F4': 'F4', 'F5': 'F5', 'F6': 'F6',
+            'F7': 'F7', 'F8': 'F8', 'F9': 'F9', 'F10': 'F10', 'F11': 'F11', 'F12': 'F12',
+            'Backspace': 'Backspace',
+            'Tab': 'Tab',
+            'Caps': 'Caps Lock',
+            'Enter': 'Enter',
+            'Shift': 'Shift',
+            'Ctrl': 'Ctrl',
+            'Alt': 'Alt',
+            'Win': 'Win',
+            'Menu': 'Menu',
+            'Space': 'Пробіл',
+            '\'': 'Апостроф',
+            '-': 'Мінус',
+            '=': 'Дорівнює',
+            '\\': 'Слеш',
+            '.': 'Крапка'
+        };
+
+        function createKeyboard() {
+            const keyboard = document.getElementById('keyboard');
+            keyboard.innerHTML = '';
+
+            // Показуємо клавіатуру в обох режимах
+            keyboard.style.display = 'inline-block';
+
+            keyboardLayout.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'keyboard-row';
+
+                row.forEach(keyText => {
+                    const keyDiv = document.createElement('div');
+                    keyDiv.className = 'key';
+                    // Не показуємо текст на клавішах - вони порожні
+                    keyDiv.textContent = '';
+                    keyDiv.dataset.key = keyText;
+
+                    // Додаємо спеціальні класи для розміру
+                    if (keyText === 'Space') {
+                        keyDiv.classList.add('space');
+                    } else if (['Backspace', 'Enter', 'Shift'].includes(keyText)) {
+                        keyDiv.classList.add('wide');
+                    } else if (['Tab', 'Caps'].includes(keyText)) {
+                        keyDiv.classList.add('extra-wide');
+                    } else if (keyText.startsWith('F') && keyText.length <= 3) {
+                        // F-клавіші трохи менші
+                        keyDiv.style.minWidth = '35px';
+                    } else if (keyText === 'Esc') {
+                        keyDiv.style.minWidth = '35px';
+                    }
+
+                    // В режимі миші дозволяємо клік
+                    if (gameState.gameMode === 'mouse') {
+                        keyDiv.onclick = () => handleKeyClick(keyText);
+                        keyDiv.style.cursor = 'pointer';
+                    } else if (gameState.gameMode === 'speed') {
+                        // В швидкісному режимі дозволяємо і мишку і клавіатуру
+                        keyDiv.onclick = () => handleKeyClick(keyText);
+                        keyDiv.style.cursor = 'pointer';
+                    } else {
+                        // В режимі клавіатури забираємо курсор
+                        keyDiv.style.cursor = 'default';
+                    }
+                    
+                    rowDiv.appendChild(keyDiv);
+                });
+
+                keyboard.appendChild(rowDiv);
+            });
+        }
+
+        function getRandomKey() {
+            const allKeys = keyboardLayout.flat();
+            // Фільтруємо клавіші для гри - беремо літери, цифри та основні спеціальні клавіші
+            const filteredKeys = allKeys.filter(key => 
+                // Українські літери
+                'ЙЦУКЕНГШЩЗХЇФІВАПРОЛДЖЄЯЧСМИТЬБЮ'.includes(key) ||
+                // Цифри
+                '1234567890'.includes(key) ||
+                // Спеціальні символи
+                ['-', '=', '\\', '.', '\''].includes(key) ||
+                // Функціональні клавіші
+                ['Space', 'Enter', 'Tab', 'Shift', 'Backspace', 'Esc'].includes(key) ||
+                // F-клавіші
+                ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].includes(key)
+            );
+            return filteredKeys[Math.floor(Math.random() * filteredKeys.length)];
+        }
+
+        function getKeyDisplayName(key) {
+            return keyDisplayNames[key] || key;
+        }
+
+        function displayNewKey() {
+            if (!gameState.gameActive) return;
+
+            gameState.currentKey = getRandomKey();
+            document.getElementById('targetKey').textContent = getKeyDisplayName(gameState.currentKey);
+
+            // Скидання таймера з урахуванням режиму
+            gameState.timeLeft = gameState.timeLimit;
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(gameState.timerInterval);
+            
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft -= 100;
+                const percentage = (gameState.timeLeft / gameState.timeLimit) * 100;
+                document.getElementById('timerFill').style.width = percentage + '%';
+
+                if (gameState.timeLeft <= 0) {
+                    handleTimeout();
+                }
+            }, 100);
+        }
+
+        function handleTimeout() {
+            gameState.wrong++;
+            updateStats();
+            clearInterval(gameState.timerInterval);
+            
+            // Анімація помилки для літери в завданні (час вийшов)
+            const targetKeyElement = document.getElementById('targetKey');
+            targetKeyElement.style.color = '#f44336';
+            targetKeyElement.classList.add('shake');
+            setTimeout(() => {
+                targetKeyElement.style.color = '#ffeb3b';
+                targetKeyElement.classList.remove('shake');
+            }, 500);
+            
+            // Підсвітка правильної клавіші на віртуальній клавіатурі
+            const correctKey = document.querySelector(`[data-key="${gameState.currentKey}"]`);
+            if (correctKey) {
+                correctKey.classList.add('correct');
+                setTimeout(() => correctKey.classList.remove('correct'), 1000);
+            }
+
+            setTimeout(() => {
+                if (gameState.wrong >= 5) {
+                    endGame();
+                } else {
+                    displayNewKey();
+                }
+            }, 1000);
+        }
+
+        function handleKeyClick(clickedKey) {
+            if (!gameState.gameActive) return;
+
+            console.log('Обробка натискання клавіші:', clickedKey, 'Очікується:', gameState.currentKey);
+            
+            clearInterval(gameState.timerInterval);
+            const keyElement = document.querySelector(`[data-key="${clickedKey}"]`);
+
+            if (clickedKey === gameState.currentKey) {
+                // Правильна відповідь
+                gameState.correct++;
+                
+                // Подвійні очки в швидкісному режимі
+                let baseScore = Math.max(100, Math.floor(gameState.timeLeft / 50));
+                if (gameState.gameMode === 'speed') {
+                    baseScore *= 2;
+                }
+                gameState.score += baseScore;
+                
+                // Підсвітка правильної клавіші на віртуальній клавіатурі
+                if (keyElement) {
+                    keyElement.classList.add('correct');
+                    setTimeout(() => keyElement.classList.remove('correct'), 500);
+                }
+
+                // Підсвітка літери в завданні
+                const targetKeyElement = document.getElementById('targetKey');
+                targetKeyElement.style.color = '#4caf50';
+                targetKeyElement.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    targetKeyElement.style.color = '#ffeb3b';
+                    targetKeyElement.style.transform = 'scale(1)';
+                }, 500);
+
+                // Збільшення рівня кожні 10 правильних відповідей
+                if (gameState.correct % 10 === 0) {
+                    gameState.level++;
+                }
+
+                setTimeout(() => displayNewKey(), 500);
+            } else {
+                // Неправильна відповідь
+                gameState.wrong++;
+                
+                // Підсвітка неправильної клавіші на віртуальній клавіатурі
+                if (keyElement) {
+                    keyElement.classList.add('wrong');
+                    setTimeout(() => keyElement.classList.remove('wrong'), 500);
+                }
+
+                // Анімація помилки для літери в завданні
+                const targetKeyElement = document.getElementById('targetKey');
+                targetKeyElement.style.color = '#f44336';
+                targetKeyElement.classList.add('shake');
+                setTimeout(() => {
+                    targetKeyElement.style.color = '#ffeb3b';
+                    targetKeyElement.classList.remove('shake');
+                }, 500);
+
+                // Підсвітка правильної клавіші на віртуальній клавіатурі
+                const correctKey = document.querySelector(`[data-key="${gameState.currentKey}"]`);
+                if (correctKey) {
+                    correctKey.classList.add('correct');
+                    setTimeout(() => correctKey.classList.remove('correct'), 1000);
+                }
+
+                setTimeout(() => {
+                    if (gameState.wrong >= 5) {
+                        endGame();
+                    } else {
+                        displayNewKey();
+                    }
+                }, 1000);
+            }
+
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('correct').textContent = gameState.correct;
+            document.getElementById('wrong').textContent = gameState.wrong;
+            document.getElementById('level').textContent = gameState.level;
+        }
+
+        function startGame(mode = 'mouse') {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            // Встановлюємо режим гри
+            gameState.gameMode = mode;
+            
+            // Встановлюємо час в залежності від режиму
+            if (mode === 'speed') {
+                gameState.timeLimit = 2000; // 2 секунди для швидкісного режиму
+            } else {
+                gameState.timeLimit = 5000; // 5 секунд для звичайних режимів
+            }
+            
+            // Оновлюємо індикатор режиму
+            const modeIndicator = document.getElementById('modeIndicator');
+            if (mode === 'mouse') {
+                modeIndicator.innerHTML = '🖱️ Режим миші';
+            } else if (mode === 'keyboard') {
+                modeIndicator.innerHTML = '⌨️ Режим клавіатури';
+            } else if (mode === 'speed') {
+                modeIndicator.innerHTML = '⚡ Швидкісний режим';
+            }
+            
+            // Скидання стану гри
+            gameState.score = 0;
+            gameState.correct = 0;
+            gameState.wrong = 0;
+            gameState.level = 1;
+            gameState.currentKey = '';
+            gameState.timeLeft = gameState.timeLimit;
+            gameState.gameActive = true;
+            gameState.timer = null;
+            gameState.timerInterval = null;
+
+            createKeyboard();
+            updateStats();
+            displayNewKey();
+        }
+
+        function endGame() {
+            gameState.gameActive = false;
+            clearInterval(gameState.timerInterval);
+            
+            const accuracy = gameState.correct + gameState.wrong > 0 ? 
+                Math.round((gameState.correct / (gameState.correct + gameState.wrong)) * 100) : 0;
+            
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('accuracy').textContent = accuracy;
+            document.getElementById('gameOver').style.display = 'flex';
+        }
+
+        function restartGame() {
+            document.getElementById('gameOver').style.display = 'none';
+            startGame();
+        }
+
+        function showStart() {
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'block';
+        }
+
+        // Обробка фізичної клавіатури
+        document.addEventListener('keydown', (e) => {
+            console.log('Клавішу натиснуто:', e.code, 'Режим:', gameState.gameMode, 'Активна:', gameState.gameActive);
+            
+            if (gameState.gameActive && (gameState.gameMode === 'keyboard' || gameState.gameMode === 'speed')) {
+                e.preventDefault();
+                
+                const pressedKey = physicalKeyMap[e.code];
+                console.log('Маппінг клавіші:', e.code, '->', pressedKey);
+                
+                if (pressedKey) {
+                    handleKeyClick(pressedKey);
+                } else {
+                    console.log('Клавішу не знайдено в маппінгу:', e.code);
+                }
+                return false;
+            } else if (gameState.gameActive && gameState.gameMode === 'mouse') {
+                // Блокуємо фізичну клавіатуру в режимі миші
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Заборона контекстного меню
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
