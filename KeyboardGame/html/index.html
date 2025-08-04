@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Знайди клавішу - Гра на запам'ятовування клавіатури</title>
+    <link rel="stylesheet" type="text/css" href="/KeyboardGame/css/styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <div id="startScreen" class="start-screen">
+            <h1 class="game-title">🎮 Знайди клавішу</h1>
+            <div class="instructions">
+                <h3>Оберіть режим гри:</h3>
+            </div>
+            
+            <div class="game-modes">
+                <div class="mode-card" onclick="startGame('mouse')">
+                    <div>
+                        <h4>🖱️ Режим миші</h4>
+                        <div class="mode-description">
+                            <p>• Дивіться на екран і запам'ятовуйте розташування клавіш</p>
+                            <p>• Коли з'явиться назва клавіші, натисніть на неї мишкою</p>
+                            <p>• У вас є 5 секунд на кожне натискання</p>
+                            <p>• Не підглядайте на фізичну клавіатуру!</p>
+                        </div>
+                    </div>
+                    <button class="button">Грати мишкою</button>
+                </div>
+                
+                <div class="mode-card" onclick="startGame('keyboard')">
+                    <div>
+                        <h4>⌨️ Режим клавіатури</h4>
+                        <div class="mode-description">
+                            <p>• Коли з'явиться назва клавіші, натисніть її на фізичній клавіатурі</p>
+                            <p>• Швидкість реакції має значення!</p>
+                            <p>• Тренуйте швидкий слепий друк</p>
+                            <p>• Ідеально для вивчення української розкладки</p>
+                        </div>
+                    </div>
+                    <button class="button">Грати клавіатурою</button>
+                </div>
+
+                <div class="mode-card" onclick="startGame('speed')">
+                    <div>
+                        <h4>⚡ Швидкісний режим</h4>
+                        <div class="mode-description">
+                            <p>• Тільки 2 секунди на кожну клавішу!</p>
+                            <p>• Використовуйте фізичну клавіатуру або мишку</p>
+                            <p>• Подвійні очки за правильні відповіді</p>
+                            <p>• Перевірте свою швидкість реакції!</p>
+                        </div>
+                    </div>
+                    <button class="button">Швидкісний виклик</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="gameScreen" style="display: none;">
+            <div class="game-header">
+                <h1 class="game-title">🎮 Знайди клавішу</h1>
+                <div class="mode-indicator" id="modeIndicator">
+                    🖱️ Режим миші
+                </div>
+                <div class="stats">
+                    <div>Очки: <span id="score">0</span></div>
+                    <div>Правильно: <span id="correct">0</span></div>
+                    <div>Помилок: <span id="wrong">0</span></div>
+                    <div>Рівень: <span id="level">1</span></div>
+                </div>
+            </div>
+
+            <div class="current-key">
+                <div>Знайдіть клавішу:</div>
+                <div class="key-display" id="targetKey">Й</div>
+                <div class="timer-bar">
+                    <div class="timer-fill" id="timerFill"></div>
+                </div>
+            </div>
+
+            <div class="keyboard" id="keyboard">
+                <!-- Клавіатура буде створена JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <div class="game-over-content">
+            <h2>🎉 Гра закінчена!</h2>
+            <p>Фінальний рахунок: <span id="finalScore">0</span></p>
+            <p>Точність: <span id="accuracy">0</span>%</p>
+            <button class="button" onclick="restartGame()">Грати знову</button>
+            <button class="button" onclick="showStart()">В головне меню</button>
+        </div>
+    </div>
+    <script src="/KeyboardGame/js/code.js"></script>
+</body>
+</html>
